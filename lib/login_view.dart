@@ -22,7 +22,7 @@ class _LoginViewState extends State<LoginView> {
       if (email.isEmpty || password.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Please enter both email and password"),
+            content: const Text("Please enter both email and password"),
             backgroundColor: Colors.redAccent.withOpacity(0.1),
           ),
         );
@@ -37,10 +37,12 @@ class _LoginViewState extends State<LoginView> {
 
       if (userCredential.user != null) {
         Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
           context,
-          MaterialPageRoute(builder: (context) => HomeView()),
+          MaterialPageRoute(builder: (context) => const HomeView()),
         );
       } else {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text(
@@ -51,9 +53,9 @@ class _LoginViewState extends State<LoginView> {
         );
       }
     } catch (e) {
-      // Handle errors
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text("Invalid Credentials",
               style: TextStyle(color: Colors.white)),
           backgroundColor: Colors.red,

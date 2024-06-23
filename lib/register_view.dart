@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print, use_build_context_synchronously
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -229,7 +231,6 @@ class _RegisterViewState extends State<RegisterView> {
                           );
                           print("account successfully created");
                         } catch (error) {
-                          // Handle errors from Firebase Authentication
                           print("Error ${error.toString()}");
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -255,7 +256,7 @@ class _RegisterViewState extends State<RegisterView> {
                         MaterialPageRoute(
                             builder: (context) => const LoginView()));
                   },
-                  child: Text(
+                  child: const Text(
                     'Already have an account? login here',
                   ),
                 ),

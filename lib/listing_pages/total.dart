@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:task_management/update_task.dart'; // Assuming UpdateTask is in update_task.dart
+import 'package:task_management/update_task.dart';
 
 class TotalTask extends StatefulWidget {
   final VoidCallback onSaveCallback;
@@ -36,11 +36,11 @@ class _TotalTaskState extends State<TotalTask> {
               whereIn: ['Completed', 'Uncompleted', 'In progress']).snapshots(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
               return Center(child: Text('Error: ${snapshot.error}'));
             } else if (snapshot.data == null || snapshot.data!.docs.isEmpty) {
-              return Center(child: Text('No completed tasks found.'));
+              return const Center(child: Text('No completed tasks found.'));
             } else {
               return ListView(
                 children: snapshot.data!.docs.map((doc) {
@@ -74,15 +74,15 @@ class _TotalTaskState extends State<TotalTask> {
                         children: [
                           Text(
                             task['title'],
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Text(
                             task['description'],
-                            style: TextStyle(color: Colors.white),
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ],
                       ),
@@ -106,7 +106,7 @@ class _TotalTaskState extends State<TotalTask> {
       case 'Low':
         return Priority.Low;
       default:
-        return Priority.Medium; // Default to Medium if unknown
+        return Priority.Medium;
     }
   }
 }

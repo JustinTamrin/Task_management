@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:task_management/constants/routes.dart';
 import 'package:task_management/listing_pages/completed.dart';
 import 'package:task_management/listing_pages/high_priority.dart';
 import 'package:task_management/listing_pages/in_progress.dart';
@@ -9,6 +10,7 @@ import 'package:task_management/listing_pages/low_priority.dart';
 import 'package:task_management/listing_pages/medium_priority.dart';
 import 'package:task_management/listing_pages/pending_task.dart';
 import 'package:task_management/listing_pages/total.dart';
+import 'package:task_management/login_view.dart';
 import 'package:task_management/new_task.dart';
 import 'package:task_management/retrieve_number.dart';
 
@@ -67,30 +69,37 @@ class _HomeViewState extends State<HomeView> {
             .instance
             .collection('tasks')
             .where('status', isEqualTo: status)
+            .where('userId', isEqualTo: user.uid)
             .get();
 
-        return snapshot
-            .size; // Return the number of documents matching the query
+        return snapshot.size;
       } catch (e) {
+        // ignore: avoid_print
         print('Error fetching task count: $e');
-        return 0; // Return 0 or handle the error as per your application's logic
+        return 0;
       }
     }
-    return 0; // Return 0 if user is null (though ideally, handle authentication properly)
+    return 0;
   }
 
   Future<int> fetchTaskCountByPriority(String priority) async {
-    try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('tasks')
-          .where('priority', isEqualTo: priority)
-          .get();
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        QuerySnapshot<Map<String, dynamic>> querySnapshot =
+            await FirebaseFirestore.instance
+                .collection('tasks')
+                .where('priority', isEqualTo: priority)
+                .where('userId', isEqualTo: user.uid) // Filter by user ID
+                .get();
 
-      return querySnapshot.size;
-    } catch (e) {
-      print('Error fetching task count by priority: $e');
-      return 0; // Return 0 or handle error as needed
+        return querySnapshot.size;
+      } catch (e) {
+        print('Error fetching task count by priority: $e');
+        return 0;
+      }
     }
+    return 0;
   }
 
   @override
@@ -158,7 +167,7 @@ class _HomeViewState extends State<HomeView> {
                                   builder: (context, snapshot) {
                                     if (snapshot.connectionState ==
                                         ConnectionState.waiting) {
-                                      return Center(
+                                      return const Center(
                                         child: CircularProgressIndicator(),
                                       );
                                     } else if (snapshot.hasError) {
@@ -169,7 +178,7 @@ class _HomeViewState extends State<HomeView> {
                                       return Stack(
                                         alignment: Alignment.topCenter,
                                         children: [
-                                          Text(
+                                          const Text(
                                             'Total tasks',
                                             style: TextStyle(
                                               fontWeight: FontWeight.w700,
@@ -181,7 +190,7 @@ class _HomeViewState extends State<HomeView> {
                                             bottom: 10,
                                             child: Text(
                                               '${snapshot.data ?? 0}',
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 24,
                                                 color: Colors.white,
@@ -220,7 +229,7 @@ class _HomeViewState extends State<HomeView> {
                                     child: Stack(
                                       alignment: Alignment.topCenter,
                                       children: [
-                                        Text(
+                                        const Text(
                                           'Completed\ntasks',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w700,
@@ -231,20 +240,20 @@ class _HomeViewState extends State<HomeView> {
                                         ),
                                         FutureBuilder<int>(
                                           future: fetchTaskCountByStatus(
-                                              'Completed'), // Replace with your method to fetch completed tasks count
+                                              'Completed'),
                                           builder: (context, snapshot) {
                                             if (snapshot.connectionState ==
                                                 ConnectionState.waiting) {
-                                              return CircularProgressIndicator(); // Placeholder while loading
+                                              return const CircularProgressIndicator();
                                             } else if (snapshot.hasError) {
                                               return Text(
-                                                  'Error: ${snapshot.error}'); // Error handling
+                                                  'Error: ${snapshot.error}');
                                             } else {
                                               return Positioned(
                                                 bottom: 10,
                                                 child: Text(
                                                   '${snapshot.data ?? 0}',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 24,
                                                     color: Colors.white,
@@ -286,7 +295,7 @@ class _HomeViewState extends State<HomeView> {
                                         child: Stack(
                                           alignment: Alignment.topCenter,
                                           children: [
-                                            Text(
+                                            const Text(
                                               'In progress\ntasks',
                                               style: TextStyle(
                                                 fontWeight: FontWeight.w700,
@@ -304,7 +313,7 @@ class _HomeViewState extends State<HomeView> {
                                                   if (snapshot
                                                           .connectionState ==
                                                       ConnectionState.waiting) {
-                                                    return CircularProgressIndicator();
+                                                    return const CircularProgressIndicator();
                                                   } else if (snapshot
                                                       .hasError) {
                                                     return Text(
@@ -312,7 +321,7 @@ class _HomeViewState extends State<HomeView> {
                                                   } else {
                                                     return Text(
                                                       '${snapshot.data ?? 0}',
-                                                      style: TextStyle(
+                                                      style: const TextStyle(
                                                         fontWeight:
                                                             FontWeight.bold,
                                                         fontSize: 24,
@@ -357,7 +366,7 @@ class _HomeViewState extends State<HomeView> {
                                         child: Stack(
                                           alignment: Alignment.topCenter,
                                           children: [
-                                            Text(
+                                            const Text(
                                               'Incomplete\ntasks',
                                               style: TextStyle(
                                                 fontWeight: FontWeight.w700,
@@ -369,14 +378,13 @@ class _HomeViewState extends State<HomeView> {
                                             Positioned(
                                               bottom: 10,
                                               child: FutureBuilder<int>(
-                                                // Replace this with your actual future function
                                                 future: fetchTaskCountByStatus(
                                                     'Uncompleted'),
                                                 builder: (context, snapshot) {
                                                   if (snapshot
                                                           .connectionState ==
                                                       ConnectionState.waiting) {
-                                                    return CircularProgressIndicator();
+                                                    return const CircularProgressIndicator();
                                                   } else if (snapshot
                                                       .hasError) {
                                                     return Text(
@@ -384,7 +392,7 @@ class _HomeViewState extends State<HomeView> {
                                                   } else {
                                                     return Text(
                                                       '${snapshot.data ?? 0}',
-                                                      style: TextStyle(
+                                                      style: const TextStyle(
                                                         fontWeight:
                                                             FontWeight.bold,
                                                         fontSize: 24,
@@ -428,7 +436,7 @@ class _HomeViewState extends State<HomeView> {
                                     child: Stack(
                                       alignment: Alignment.topCenter,
                                       children: [
-                                        Text(
+                                        const Text(
                                           'High-priority\ntask',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w700,
@@ -440,20 +448,19 @@ class _HomeViewState extends State<HomeView> {
                                         Positioned(
                                           bottom: 10,
                                           child: FutureBuilder<int>(
-                                            // Replace this with your actual future function
                                             future: fetchTaskCountByPriority(
                                                 'High'),
                                             builder: (context, snapshot) {
                                               if (snapshot.connectionState ==
                                                   ConnectionState.waiting) {
-                                                return CircularProgressIndicator();
+                                                return const CircularProgressIndicator();
                                               } else if (snapshot.hasError) {
                                                 return Text(
                                                     'Error: ${snapshot.error}');
                                               } else {
                                                 return Text(
                                                   '${snapshot.data ?? 0}',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 24,
                                                     color: Colors.white,
@@ -490,7 +497,7 @@ class _HomeViewState extends State<HomeView> {
                                     child: Stack(
                                       alignment: Alignment.topCenter,
                                       children: [
-                                        Text(
+                                        const Text(
                                           'Med-priority\ntasks',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w700,
@@ -502,20 +509,19 @@ class _HomeViewState extends State<HomeView> {
                                         Positioned(
                                           bottom: 10,
                                           child: FutureBuilder<int>(
-                                            // Replace this with your actual future function
                                             future: fetchTaskCountByPriority(
                                                 'Medium'),
                                             builder: (context, snapshot) {
                                               if (snapshot.connectionState ==
                                                   ConnectionState.waiting) {
-                                                return CircularProgressIndicator();
+                                                return const CircularProgressIndicator();
                                               } else if (snapshot.hasError) {
                                                 return Text(
                                                     'Error: ${snapshot.error}');
                                               } else {
                                                 return Text(
                                                   '${snapshot.data ?? 0}',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 24,
                                                     color: Colors.white,
@@ -552,7 +558,7 @@ class _HomeViewState extends State<HomeView> {
                                     child: Stack(
                                       alignment: Alignment.topCenter,
                                       children: [
-                                        Text(
+                                        const Text(
                                           'Low-priority\ntasks',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w700,
@@ -564,20 +570,19 @@ class _HomeViewState extends State<HomeView> {
                                         Positioned(
                                           bottom: 10,
                                           child: FutureBuilder<int>(
-                                            // Replace this with your actual future function
                                             future:
                                                 fetchTaskCountByPriority('Low'),
                                             builder: (context, snapshot) {
                                               if (snapshot.connectionState ==
                                                   ConnectionState.waiting) {
-                                                return CircularProgressIndicator();
+                                                return const CircularProgressIndicator();
                                               } else if (snapshot.hasError) {
                                                 return Text(
                                                     'Error: ${snapshot.error}');
                                               } else {
                                                 return Text(
                                                   '${snapshot.data ?? 0}',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 24,
                                                     color: Colors.white,
@@ -617,7 +622,7 @@ class _HomeViewState extends State<HomeView> {
                                   builder: (context, snapshot) {
                                     if (snapshot.connectionState ==
                                         ConnectionState.waiting) {
-                                      return Center(
+                                      return const Center(
                                         child: CircularProgressIndicator(),
                                       );
                                     } else if (snapshot.hasError) {
@@ -628,8 +633,7 @@ class _HomeViewState extends State<HomeView> {
                                       List<String> pendingTasks =
                                           snapshot.data ?? [];
                                       return Column(
-                                        mainAxisSize: MainAxisSize
-                                            .min, // Ensure the column occupies minimum height
+                                        mainAxisSize: MainAxisSize.min,
                                         children: [
                                           const Padding(
                                             padding: EdgeInsets.all(8.0),
@@ -644,10 +648,9 @@ class _HomeViewState extends State<HomeView> {
                                             ),
                                           ),
                                           ListView.builder(
-                                            shrinkWrap:
-                                                true, // Allow ListView to occupy only the space it needs
+                                            shrinkWrap: true,
                                             physics:
-                                                NeverScrollableScrollPhysics(), // Disable scrolling
+                                                const NeverScrollableScrollPhysics(),
                                             itemCount: pendingTasks.length,
                                             itemBuilder: (context, index) {
                                               return ListTile(
@@ -678,14 +681,22 @@ class _HomeViewState extends State<HomeView> {
             ),
             bottomNavigationBar: BottomNavigationBar(
               backgroundColor: const Color(0xff02802D),
-              items: const [
+              items: [
                 BottomNavigationBarItem(
-                  icon: Icon(
-                    Icons.logout,
+                  icon: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const LoginView()));
+                    },
+                    child: const Icon(
+                      Icons.logout,
+                    ),
                   ),
                   label: 'Logout',
                 ),
-                BottomNavigationBarItem(
+                const BottomNavigationBarItem(
                     icon: Icon(Icons.settings), label: 'Settings'),
               ],
               selectedItemColor: Colors.white,
@@ -707,9 +718,7 @@ class _HomeViewState extends State<HomeView> {
                             MaterialPageRoute(
                                 builder: (context) => NewTask(
                                       onSaveCallback: () {
-                                        setState(() {
-                                          // Refresh task list or UI
-                                        });
+                                        setState(() {});
                                       },
                                     )));
                       },

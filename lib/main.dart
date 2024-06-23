@@ -18,6 +18,7 @@ void main() async {
       registerView: (context) => const RegisterView(),
       homeView: (context) => const HomeView(),
       newTask: (context) => NewTask(onSaveCallback: () {
+            // ignore: avoid_print
             print('object');
           }),
     },

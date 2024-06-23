@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:task_management/update_task.dart'; // Assuming UpdateTask is in update_task.dart
+import 'package:task_management/update_task.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CompletedTask extends StatefulWidget {
   final VoidCallback onSaveCallback;
@@ -12,6 +13,13 @@ class CompletedTask extends StatefulWidget {
 
 class _CompletedTaskState extends State<CompletedTask> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  late User? _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentUser = FirebaseAuth.instance.currentUser;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,14 +43,15 @@ class _CompletedTaskState extends State<CompletedTask> {
           stream: _firestore
               .collection('tasks')
               .where('status', isEqualTo: 'Completed')
+              .where('userId', isEqualTo: _currentUser?.uid)
               .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
               return Center(child: Text('Error: ${snapshot.error}'));
             } else if (snapshot.data == null || snapshot.data!.docs.isEmpty) {
-              return Center(child: Text('No completed tasks found.'));
+              return const Center(child: Text('No completed tasks found.'));
             } else {
               return ListView(
                 children: snapshot.data!.docs.map((doc) {
@@ -76,15 +85,15 @@ class _CompletedTaskState extends State<CompletedTask> {
                         children: [
                           Text(
                             task['title'],
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Text(
                             task['description'],
-                            style: TextStyle(color: Colors.white),
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ],
                       ),
@@ -108,7 +117,7 @@ class _CompletedTaskState extends State<CompletedTask> {
       case 'Low':
         return Priority.Low;
       default:
-        return Priority.Medium; // Default to Medium if unknown
+        return Priority.Medium;
     }
   }
 }

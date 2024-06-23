@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 enum Priority { High, Medium, Low }
@@ -42,8 +43,6 @@ class _UpdateTaskState extends State<UpdateTask> {
     _titleController = TextEditingController(text: widget.initialTitle);
     _descriptionController =
         TextEditingController(text: widget.initialDescription);
-    // Set the initial value for the dropdown
-    // Initialize dropdown and priority values with initial values or default values
     _selectedDropDownItem = widget.initialStatus ?? 'Uncompleted';
     _selectedPriority = widget.initialPriority ?? Priority.Medium;
   }
@@ -51,25 +50,41 @@ class _UpdateTaskState extends State<UpdateTask> {
   void updateTask() async {
     String title = _titleController.text.trim();
     String description = _descriptionController.text.trim();
+    String? userId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (userId == null) {
+      print('No user is logged in.');
+      return;
+    }
 
     if (title.isNotEmpty && description.isNotEmpty && widget.taskId != null) {
       try {
-        await _firestore.collection('tasks').doc(widget.taskId).update({
-          'title': title,
-          'description': description,
-          'status': _selectedDropDownItem,
-          'priority': _selectedPriority.toString().split('.').last,
-        });
+        DocumentReference taskRef =
+            FirebaseFirestore.instance.collection('tasks').doc(widget.taskId);
 
-        print('Task updated successfully!');
-        widget.onSaveCallback();
+        DocumentSnapshot taskSnapshot = await taskRef.get();
+
+        if (taskSnapshot.exists) {
+          var taskData = taskSnapshot.data() as Map<String, dynamic>;
+
+          if (taskData['userId'] == userId) {
+            await taskRef.update({
+              'title': title,
+              'description': description,
+              'status': _selectedDropDownItem,
+              'priority': _selectedPriority.toString().split('.').last,
+              'userId': userId,
+            });
+
+            print('Task updated successfully!');
+            widget.onSaveCallback();
+          }
+        }
       } catch (e) {
         print('Failed to update task: $e');
-        // Handle error gracefully (e.g., show snackbar)
       }
     } else {
       print('Title and description cannot be empty');
-      // Optionally, show a snackbar or dialog to inform the user
     }
   }
 
@@ -110,10 +125,7 @@ class _UpdateTaskState extends State<UpdateTask> {
                 child: Column(children: [
               TextField(
                 controller: _titleController,
-                onChanged: (value) {
-                  // Optional: Trigger saveTask on title change
-                  // saveTask(); // Uncomment if you want to save on every keystroke
-                },
+                onChanged: (value) {},
                 decoration: InputDecoration(
                     hintText: 'Enter the title...',
                     border: OutlineInputBorder(
@@ -123,10 +135,7 @@ class _UpdateTaskState extends State<UpdateTask> {
               ),
               TextField(
                 controller: _descriptionController,
-                onChanged: (value) {
-                  // Optional: Trigger saveTask on description change
-                  // saveTask(); // Uncomment if you want to save on every keystroke
-                },
+                onChanged: (value) {},
                 decoration: InputDecoration(
                     hintText: 'Type something...',
                     border: OutlineInputBorder(
@@ -140,22 +149,18 @@ class _UpdateTaskState extends State<UpdateTask> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: DropdownButton<String>(
-                      value:
-                          _selectedDropDownItem, // Set the default selected value
-                      icon: const Icon(Icons.arrow_right), // Dropdown icon
-                      iconSize: 24, // Icon size
-                      elevation: 16, // Elevation of the dropdown
-                      style: const TextStyle(
-                          color: Color(
-                              0xff02802D)), // Text style of the dropdown items
+                      value: _selectedDropDownItem,
+                      icon: const Icon(Icons.arrow_right),
+                      iconSize: 24,
+                      elevation: 16,
+                      style: const TextStyle(color: Color(0xff02802D)),
                       underline: Container(
                         height: 2,
-                        color: const Color(0xff02802D), // Underline color
+                        color: const Color(0xff02802D),
                       ),
                       onChanged: (String? newValue) {
                         setState(() {
-                          _selectedDropDownItem = newValue ??
-                              _dropdownItems[0]; // Update the selected value
+                          _selectedDropDownItem = newValue ?? _dropdownItems[0];
                         });
                       },
                       items: _dropdownItems
